@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:Arial;font-size:17.009270px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:235.917160px;left:48.508961px"><nobr>Contact </nobr></span></span></p><p><span style="font-family:Arial;font-size:17.009270px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:460.065430px;left:48.508961px"><nobr>Education </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.007043px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:309.193451px;left:48.508961px"><nobr>+91 9675871184 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:290.401459px;left:48.508961px"><nobr>Phone </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.007043px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:360.839752px;left:48.508961px"><nobr>deepanshuhyb@gmail.com </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:343.650970px;left:48.508961px"><nobr>Email </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.007043px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:409.798920px;left:49.288094px"><nobr>Faridabad, Haryana </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:391.454987px;left:48.508961px"><nobr>Address </nobr></span></span></p><p><span style="font-family:Arial;font-size:30.429441px;font-style:normal;font-weight:normal;color:#323B4C;"><span style="position:absolute;top:51.315105px;left:302.925964px"><nobr>Deepanshu Saxena </nobr></span><span style="position:absolute;top:101.894691px;left:302.925964px"><nobr><span style="font-size:13.950301px;">V i d e o E d i t o r </span></nobr></span></span></p><p><span style="font-family:Arial;font-size:17.009270px;font-weight:bold;color:#323B4C;"><span style="position:absolute;top:235.917160px;left:302.925964px"><nobr>Experience </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.006733px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:364.692139px;left:327.168579px"><nobr>I used to edit some videos for a YouTube Channel. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.006733px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:380.700836px;left:327.168579px"><nobr>Primarily all videos were gaming montages and whole walkthroughs of games that were </nobr></span><span style="position:absolute;top:396.709564px;left:327.168579px"><nobr>trending at that time. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.006733px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:575.972778px;left:327.168579px"><nobr>I used to make videos on random tech hack. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.006733px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:591.981506px;left:327.168579px"><nobr>I did all the editing part there by myself as well. </nobr></span></span></p><p><span style="font-family:Arial;font-size:12.010076px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:338.020752px;left:327.168579px"><nobr>Video Editor </nobr></span></span></p><p><span style="font-family:Arial;font-size:12.010076px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:549.301331px;left:327.168579px"><nobr>Owner </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:298.045410px;left:327.168579px"><nobr>2019 - 2020 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:509.325958px;left:327.168579px"><nobr>2017-2018 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:315.957428px;left:327.168579px"><nobr>Freelancer </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:527.238037px;left:327.168579px"><nobr>YouTube Channel </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007557px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:627.608276px;left:48.508961px"><nobr>Kmsss Bulandshahr </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:538.600830px;left:48.508961px"><nobr>AISSCE </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:607.807007px;left:48.508961px"><nobr>AISSE </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007557px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:522.814331px;left:48.508961px"><nobr>2021 </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007557px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:558.402161px;left:48.508961px"><nobr>Gbsss No1 South East Delhi </nobr></span><span style="position:absolute;top:592.020386px;left:48.508961px"><nobr>2019 </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007545px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:763.205383px;left:67.561050px"><nobr>HTML3 </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007545px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:822.593079px;left:67.561050px"><nobr>Basic Color Grading </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007545px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:733.511536px;left:67.561050px"><nobr>C </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007545px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:792.899292px;left:67.561050px"><nobr>Da Vinci Resolve </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007557px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:948.988159px;left:48.508961px"><nobr>English </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.007557px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:974.439575px;left:48.508961px"><nobr>Hindi </nobr></span></span></p><p><span style="font-family:Arial;font-size:17.009270px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:676.765930px;left:48.508961px"><nobr>Expertise </nobr></span></span></p><p><span style="font-family:Arial;font-size:17.009270px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:872.751221px;left:44.186470px"><nobr>Language </nobr></span></span></p><p><span style="font-family:Arial;font-size:17.009270px;font-weight:bold;color:#323B4C;"><span style="position:absolute;top:667.761169px;left:311.393524px"><nobr>Extras </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:725.527832px;left:327.168579px"><nobr>2021-2022 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.005894px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:746.872742px;left:327.168579px"><nobr>Discord And Reddit </nobr></span></span></p><p><span style="font-family:Arial;font-size:12.010076px;font-style:normal;font-weight:normal;color:#737373;"><span style="position:absolute;top:768.656921px;left:327.168579px"><nobr>Moderator </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.007043px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:793.015198px;left:327.168579px"><nobr>I used to moderate 2 discord servers and a reddit sub. </nobr></span></span></p><p><span style="font-family:Arial;font-size:8.007043px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:807.245789px;left:327.168579px"><nobr>Organized a chess tournament twice that resulted in a sudden rise in the number of new members. </nobr></span><span style="position:absolute;top:821.476257px;left:327.168579px"><nobr>From around 200 to 350 members in a month, an increase of about 75%. </nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
